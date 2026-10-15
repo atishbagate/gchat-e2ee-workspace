@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GChat Stealth E2EE</title>
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-card: #0f172a;
+      --bg-input: #020617;
+      --border-color: #1e293b;
+      --border-focus: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #0284c7;
+      --accent-cyan-hover: #0369a1;
+      --accent-emerald: #059669;
+      --accent-emerald-hover: #047857;
+      --accent-rose: #be123c;
+      --accent-rose-hover: #9f1239;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 320px;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 16px;
+      user-select: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #38bdf8;
+    }
+
+    .app-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .status-badge.unlocked {
+      background: #022c22;
+      color: #34d399;
+      border-color: #065f46;
+    }
+
+    .status-badge.locked {
+      background: #450a0a;
+      color: #f87171;
+      border-color: #7f1d1d;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #64748b;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    input[type="password"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      background: var(--bg-input);
+      color: #f1f5f9;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--border-focus);
+    }
+
+    .input-wrapper input {
+      padding-right: 32px;
+    }
+
+    .toggle-pwd-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-pwd-btn:hover {
+      color: #cbd5e1;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-emerald);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-emerald-hover);
+    }
+
+    .btn-danger {
+      background: var(--accent-rose);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--accent-rose-hover);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #334155;
+      color: #7dd3fc;
+    }
+
+    .btn-outline {
+      flex: 0 0 auto;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      padding: 7px 10px;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      color: #f1f5f9;
+      border-color: #475569;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 52px;
+      font-family: monospace;
+      margin-bottom: 8px;
+    }
+
+    .feedback {
+      font-size: 11px;
+      margin-top: 6px;
+      min-height: 16px;
+      color: #38bdf8;
+      word-break: break-word;
+    }
+
+    .feedback.error {
+      color: #f87171;
+    }
+
+    .feedback.success {
+      color: #34d399;
+    }
+
+    .result-container {
+      margin-top: 8px;
+      display: none;
+    }
+
+    .result-box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #7dd3fc;
+      max-height: 90px;
+      overflow-y: auto;
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .result-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .btn-copy {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-copy:hover {
+      color: #ffffff;
+      border-color: #64748b;
+    }
+
+    .footer-tip {
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .footer-tip kbd {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #334155;
+      font-family: monospace;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-group">
+      <span class="app-title">GChat Stealth E2EE</span>
+      <span class="app-subtitle">Zero-Storage Crypto Vault</span>
+    </div>
+    <div id="statusBadge" class="status-badge locked">🔴 Session Locked</div>
+  </div>
+
+  <!-- Key Management Section -->
+  <div class="card">
+    <span class="section-label">Shared Passphrase</span>
+    <div class="input-wrapper">
+      <input type="password" id="passphraseInput" placeholder="Enter shared passphrase..." autocomplete="off">
+      <button type="button" id="togglePwdBtn" class="toggle-pwd-btn" title="Toggle password visibility">👁️</button>
+    </div>
+    <div class="btn-row">
+      <button type="button" id="unlockBtn" class="btn btn-primary">Unlock Session</button>
+      <button type="button" id="lockBtn" class="btn btn-danger">Lock &amp; Wipe RAM</button>
+    </div>
+    <div id="authFeedback" class="feedback"></div>
+  </div>
+
+  <!-- Fallback Scratchpad Section -->
+  <div class="card">
+    <span class="section-label">Fallback Scratchpad</span>
+    <textarea id="scratchpadInput" placeholder="Type plaintext or paste ENCv2:... payload"></textarea>
+    <div class="btn-row">
+      <button type="button" id="scratchpadEncryptBtn" class="btn btn-secondary">⚡ Encrypt</button>
+      <button type="button" id="scratchpadDecryptBtn" class="btn btn-secondary">🔍 Decrypt</button>
+      <button type="button" id="scratchpadClearBtn" class="btn btn-outline" title="Clear input and result">Clear</button>
+    </div>
+    <div id="scratchpadFeedback" class="feedback"></div>
+    <div id="resultContainer" class="result-container">
+      <div id="resultBox" class="result-box"></div>
+      <div class="result-actions">
+        <button type="button" id="copyResultBtn" class="btn-copy">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-tip">
+    Tip: Press <kbd>Alt</kbd> + <kbd>E</kbd> inside Chat compose box to encrypt in-place.
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
